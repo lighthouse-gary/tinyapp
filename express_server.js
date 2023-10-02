@@ -25,6 +25,15 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+app.get("/urls/:id", (req, res) => {
+  const id = req.params.id; // Get the id from the URL
+  const longURL = urlDatabase[id]; // Retrieve the corresponding URL from urlDatabase
+
+  const templateVars = { id, longURL }; // Create template variables
+
+  res.render("urls_show", templateVars); // Render the template with the data
+});
  
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
