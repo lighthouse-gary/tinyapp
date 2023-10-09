@@ -1,38 +1,42 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
-
-app.set("view engine", "ejs");
+const PORT = 8080;
 app.use(express.urlencoded({ extended: true }));
 
-function generateRandomString(length) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let randomString = '';
+app.set("view engine", "ejs");
 
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    randomString += characters[randomIndex];
-  }
-
-  return randomString;
-}
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+// function that returns a string of 6 random alphanumeric characters
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomString = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    randomString += characters.charAt(randomIndex);
+  }
+
+  return randomString;
+}
+
+app.post("/urls", (req, res) => {
+  const id = generateRandomString(6);
+
+  // Get the longURL from the request body
+  const longURL = req.body.longURL;
+
+  // Save the key-value pair to urlDatabase
+  urlDatabase[id] = longURL;
+
+  // Redirect to a page showing the newly created URL (you can customize this URL)
+  res.redirect(`/urls/${id}`);
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -44,48 +48,43 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const id = req.params.id; // Get the id from the URL
-  const longURL = urlDatabase[id]; // Retrieve the corresponding URL from urlDatabase
-
-  const templateVars = { id, longURL }; // Create template variables
-
-  res.render("urls_show", templateVars); // Render the template with the data
+  const id = req.params.id;
+  // Assuming you have a urlDatabase object containing your URL data
+  const longURL = urlDatabase[id]; // Replace with your actual data retrieval logic
+  const templateVars = { id, longURL };
+  res.render("urls_show", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
-  const id = req.params.id; // Get the id from the URL
-  const longURL = urlDatabase[id]; // Retrieve the corresponding URL from urlDatabase
-  
-  res.redirect(longURL);
-});
-
-app.post("/urls", (req, res) => {
-  const longURL = req.body.longURL; // Get the longURL from the POST request body
-  const shortURL = generateRandomString(6); // Generate a random short URL
-
-  // Save the key-value pair in the urlDatabase
-  urlDatabase[shortURL] = longURL;
-
-  // Redirect to the page that displays the new URL
-  res.redirect(`/urls/${shortURL}`);
-});
-
-// Define a POST route to remove a URL resource
-app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
 
-  // Check if the URL with the provided ID exists
+  // Check if the id exists in your urlDatabase
   if (urlDatabase[id]) {
-    // Use the delete operator to remove the URL
-    delete urlDatabase[id];
-    // Redirect the client back to the urls page
-    res.redirect("/urls");
+    // If it exists, retrieve the longURL and perform the redirection
+    const longURL = urlDatabase[id];
+    res.redirect(longURL);
   } else {
-    // Handle the case where the URL with the provided ID does not exist
-    res.status(404).send("URL not found");
+    // If the id doesn't exist, you can handle it as an error or redirect to an error page
+    res.status(404).send("URL not found"); // You can customize the error message or page
   }
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
+app.post("/urls/:id", (req, res) => {
+  const urlId = req.params.id;
+  const newLongURL = req.body.newLongURL; // Assuming you have a form field named 'newLongURL'
+
+  // Update the long URL in your database or data structure (e.g., urlDatabase)
+  urlDatabase[urlId] = newLongURL;
+
+  res.redirect("/urls"); // Redirect the client back to /urls
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
