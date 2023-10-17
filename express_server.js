@@ -18,9 +18,6 @@ function generateRandomString() {
   return result;
 }
 
-app.post("/urls", (req, res) => {
-  const id = generateRandomString(6);
-
 const users = {
   userRandomID: {
     id: "userRandomID",
