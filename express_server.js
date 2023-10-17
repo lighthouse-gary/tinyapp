@@ -18,10 +18,8 @@ function generateRandomString() {
   return result;
 }
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+app.post("/urls", (req, res) => {
+  const id = generateRandomString(6);
 
 const users = {
   userRandomID: {
@@ -166,6 +164,15 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+app.post("/urls/:id", (req, res) => {
+  const urlId = req.params.id;
+  const newLongURL = req.body.newLongURL; // Assuming you have a form field named 'newLongURL'
+
+  // Update the long URL in your database or data structure (e.g., urlDatabase)
+  urlDatabase[urlId] = newLongURL;
+
+  res.redirect("/urls"); // Redirect the client back to /urls
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
