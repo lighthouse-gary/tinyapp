@@ -25,7 +25,8 @@
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
-            <th scope="col">Actions</th> <!-- Add a new column for the forms -->
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -33,13 +34,13 @@
             <tr>
               <td><%= id %></td>
               <td><%= urls[id] %></td>
+              <td><a href="/urls/<%= id %>">Edit</a></td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <!-- Add any form elements or content you need here -->
-                  <button type="submit">Delete</button>
-                </form>
+                  <form method="POST" action="/urls/<%= id %>/delete"> <!-- Form for each shortened URL -->
+                      <button type="submit" class="btn btn-danger">Delete</button> <!-- Delete button for each form -->
+                  </form>
               </td>
-            </tr>
+          </tr>
           <% } %>
         </tbody>
       </table>
