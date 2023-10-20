@@ -18,6 +18,11 @@ function generateRandomString() {
   return result;
 }
 
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -30,6 +35,15 @@ const users = {
     password: "5678",
   },
 };
+
+const getUserByEmail = function(email) {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user;
+      }
+    }
+  };
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
@@ -100,28 +114,19 @@ app.post('/urls/:id', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  let userFound = false;
-  let matchedUserId;
 
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      userFound = true;
-      if (users[userId].password === password) {
-        matchedUserId = userId;
-        break;
-      } else {
-        res.status(403).send("Password does not match.");
-        return;
-      }
-    }
-  }
-
-  if (!userFound) {
-    res.status(403).send("User not found.");
+  const user = getUserByEmail(email);
+  if (!user) {
+    res.status(403).send("user not found");
     return;
   }
 
-  res.cookie('user_id', matchedUserId);
+  if (user.password !== password) {
+    res.status(403).send("Password does not match.");
+    return;
+  }
+
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
@@ -131,31 +136,27 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userId = generateRandomString(); // Generate a random user ID
   const { email, password } = req.body; // Extract the email and password from the request body
-
+  
   // Check for empty email or password
   if (!email || !password) {
     res.status(400).send("Email or password cannot be empty.");
     return;
   }
-
+  
   // Check if the email already exists in the users object
-  const existingUser = Object.values(users).find(user => user.email === email);
-  if (existingUser) {
+  // const existingUser = Object.values(users).find(user => user.email === email);
+  if (getUserByEmail(email)) {
     res.status(400).send("Email already exists. Please use a different email.");
     return;
   }
-
+  
+  const id = generateRandomString(); // Generate a random user ID
   // Add a new user object to the global users object
-  users[userId] = {
-    id: userId,
-    email: email,
-    password: password
-  };
+  users[id] = { id, email, password };
 
   // Set a user_id cookie containing the user's newly generated ID
-  res.cookie("user_id", userId);
+  res.cookie("user_id", id);
 
   // Redirect the user to the /urls page
   res.redirect("/urls");
