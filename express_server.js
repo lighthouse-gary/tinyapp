@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -42,6 +43,7 @@ const urlDatabase = {
 };
 
 // Existing users data
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -218,8 +220,27 @@ app.post("/logout", (req, res) => {
   res.redirect("/login"); // Redirect the client back to the /login page
 });
 
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  const user = getUserByEmail(email);
+  if (!user) {
+    res.status(403).send("User not found");
+  }
+
+  const passwordMatch = bcrypt.compareSync(password, user.password);
+  
+  if (!passwordMatch) {
+    res.status(403).send("Password does not match");
+    return;
+  }
+
+  res.cookie('user_id', user.id);
+  res.redirect('/urls');
+});
+
 app.post("/register", (req, res) => {
-  const { email, password } = req.body; // Extract the email and password from the request body
+  const { email, password } = req.body;
 
   // Check for empty email or password
   if (!email || !password) {
@@ -228,15 +249,16 @@ app.post("/register", (req, res) => {
   }
 
   // Check if the email already exists in the users object
-  // const existingUser = Object.values(users).find(user => user.email === email);
   if (getUserByEmail(email)) {
     res.status(400).send("Email already exists. Please use a different email.");
     return;
   }
 
-  const id = generateRandomString(); // Generate a random user ID
+  const id = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   // Add a new user object to the global users object
-  users[id] = { id, email, password };
+  users[id] = { id, email, password: hashedPassword};
 
   // Set a user_id cookie containing the user's newly generated ID
   res.cookie("user_id", id);
